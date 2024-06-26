@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishing Website Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <div class="container max-w-[800px] mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-4">Phishing Website Prediction</h1>
+        <form method="post" action="/">
+            <div class="mb-4">
+                <label for="url" class="block text-gray-700 text-sm font-bold mb-2">Enter URL:</label>
+                <input type="text" id="url" name="url" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="https://example.com">
+            </div>
+            <div class="flex items-center justify-center">
+                <button type="submit" class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">Predict</button>
+            </div>
+        </form>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="mt-4">
+            {% for category, message in messages %}
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        {% if features %}
+        <div class="mt-6">
+            <h2 class="text-xl font-bold">Extracted Features</h2>
+            <ul class="list-disc list-inside">
+                {% for key, value in features.items() %}
+                <li><strong>{{ key }}:</strong> {{ value }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+        {% if prediction is not none %}
+        <div class="mt-6 text-center">
+            <p class="text-lg">
+                Prediction: <span class="font-bold">
+                    {% if prediction == 1 %}
+                        Website Phishing
+                    {% elif prediction == 0 %}
+                        Website Mencurigakan
+                    {% else %}
+                        Website Sah
+                    {% endif %}
+                </span>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
