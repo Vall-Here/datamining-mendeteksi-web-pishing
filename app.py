@@ -8,9 +8,23 @@ import whois
 import datetime
 import numpy as np
 
+# ScraperAPI configuration
+SCRAPER_API_KEY = '0559aadd0961a656f701aaa75513aa11'  # Ganti dengan kunci API ScraperAPI Anda
+SCRAPER_API_URL = 'http://api.scraperapi.com'
+
 # Fungsi untuk memuat model
 def load_model(model_path):
     return pickle.load(open(model_path, 'rb'))
+
+# Fungsi untuk mengambil konten URL menggunakan ScraperAPI
+def fetch_url_with_scraperapi(url):
+    try:
+        response = requests.get(SCRAPER_API_URL, params={'api_key': SCRAPER_API_KEY, 'url': url})
+        response.raise_for_status()
+        return response.content
+    except requests.RequestException as e:
+        flash(f"Error connecting to {url} via ScraperAPI: {e}", "error")
+        return None
 
 # Fungsi untuk mengecek HTTPS
 def check_https(url):
@@ -98,14 +112,21 @@ def check_web_traffic():
 
 # Fungsi utama untuk mengekstrak fitur dari URL
 def extract_features(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-    except requests.RequestException as e:
-        flash(f"Error connecting to {url}: {e}", "error")
-        return None, None
-    
-    soup = BeautifulSoup(response.content, 'html.parser')
+    content = fetch_url_with_scraperapi(url)
+    if not content:
+        return np.array([-1, -1, -1, -1, -1, -1, -1, -1, -1]).reshape(1, -1), {
+            "SFH": -1,
+            "Pop Up Window": -1,
+            "SSL Final State": -1,
+            "Request URL": -1,
+            "URL of Anchor": -1,
+            "Web Traffic": -1,
+            "URL Length": -1,
+            "Age of Domain": -1,
+            "Having IP Address": 1,
+        }
+
+    soup = BeautifulSoup(content, 'html.parser')
     
     sfh_status = check_sfh(url, soup)
     pop_up_status = check_pop_up(soup)
@@ -144,7 +165,7 @@ def feature_description(features):
     descriptions["Web Traffic"] = "Lalu lintas web tinggi (banyak pengunjung, mengindikasikan situs yang populer)" if features["Web Traffic"] == 1 else ("Lalu lintas web sedang" if features["Web Traffic"] == 0 else "Lalu lintas web rendah (sedikit pengunjung, mengindikasikan situs tidak populer atau baru)")
     descriptions["URL Length"] = "URL panjang" if features["URL Length"] == 1 else ("URL dengan panjang sedang" if features["URL Length"] == 0 else "URL pendek")
     descriptions["Age of Domain"] = "Domain telah ada untuk waktu yang lama (lebih dari 6 bulan)" if features["Age of Domain"] == 1 else "Domain baru (kurang dari 6 bulan)"
-    descriptions["Having IP Address"] = "URL memiliki alamat IP (biasanya mengindikasikan situs tidak sah atau phishing)" if features["Having IP Address"] == 1 else "URL tidak memiliki alamat IP (menggunakan nama domain)"
+    descriptions["Having IP Address"] = "URL memiliki alamat IP (biasanya mengindikasikan situs tidak sah atau phishing)" if features["Having IP Address"] == 1 else "URL Aman"
     return descriptions
 
 # Memuat model yang telah disimpan
